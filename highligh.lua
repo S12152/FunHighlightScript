@@ -1,67 +1,55 @@
--- LocalScript (put in StarterPlayerScripts)
+-- Highlight All Players Script
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local CoreGui = game:GetService("CoreGui")
+local LocalPlayer = Players.LocalPlayer
 
--- Create ScreenGui
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "ESPGui"
-screenGui.Parent = CoreGui
+-- Function to create a highlight above a player
+local function highlightPlayer(player)
+    if player == LocalPlayer then return end -- Skip local player
 
--- Create a toggle button
-local toggleButton = Instance.new("TextButton")
-toggleButton.Size = UDim2.new(0, 120, 0, 40)
-toggleButton.Position = UDim2.new(0, 10, 0, 10)
-toggleButton.Text = "Toggle ESP"
-toggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleButton.Parent = screenGui
-
-local espEnabled = false
-
--- Function to add highlight to a character
-local function addHighlight(character)
-    if character:FindFirstChild("Highlight") then return end
-    local highlight = Instance.new("Highlight")
-    highlight.Name = "Highlight"
-    highlight.Adornee = character
-    highlight.FillColor = Color3.fromRGB(0, 255, 0)
-    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    highlight.Parent = character
-end
-
--- Remove highlight
-local function removeHighlight(character)
-    if character:FindFirstChild("Highlight") then
-        character.Highlight:Destroy()
-    end
-end
-
--- Apply or remove ESP for all players
-local function updateESP()
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr.Character then
-            if espEnabled then
-                addHighlight(plr.Character)
-            else
-                removeHighlight(plr.Character)
-            end
-            -- Track respawns
-            plr.CharacterAdded:Connect(function(char)
-                if espEnabled then
-                    addHighlight(char)
-                end
-            end)
+    local character = player.Character
+    if character and character:FindFirstChild("Head") then
+        -- Remove existing highlight if exists
+        if character:FindFirstChild("PlayerHighlight") then
+            character.PlayerHighlight:Destroy()
         end
+
+        -- Create BillboardGui
+        local billboard = Instance.new("BillboardGui")
+        billboard.Name = "PlayerHighlight"
+        billboard.Adornee = character.Head
+        billboard.Size = UDim2.new(0, 100, 0, 50)
+        billboard.StudsOffset = Vector3.new(0, 2, 0)
+        billboard.AlwaysOnTop = true
+
+        -- Create TextLabel
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, 0, 1, 0)
+        label.BackgroundTransparency = 1
+        label.TextColor3 = Color3.new(1, 0, 0) -- Red color
+        label.TextStrokeTransparency = 0
+        label.TextScaled = true
+        label.Text = player.Name
+        label.Parent = billboard
+
+        billboard.Parent = character
     end
 end
 
--- Button toggle
-toggleButton.MouseButton1Click:Connect(function()
-    espEnabled = not espEnabled
-    updateESP()
+-- Highlight existing players
+for _, player in pairs(Players:GetPlayers()) do
+    highlightPlayer(player)
+end
+
+-- Highlight new players when they join
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        highlightPlayer(player)
+    end)
 end)
 
--- Initialize for current players
-updateESP()
+-- Update highlights when character respawns
+Players.PlayerRemoving:Connect(function(player)
+    if player.Character and player.Character:FindFirstChild("PlayerHighlight") then
+        player.Character.PlayerHighlight:Destroy()
+    end
+end)
