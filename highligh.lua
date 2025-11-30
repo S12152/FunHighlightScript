@@ -1,7 +1,5 @@
--- LocalScript (put this in StarterPlayerScripts)
 local Players = game:GetService("Players")
 
--- Function to add highlight to a character
 local function addHighlight(character)
     if character:FindFirstChild("Highlight") then return end -- prevent duplicates
 
@@ -14,20 +12,17 @@ local function addHighlight(character)
     highlight.Parent = character
 end
 
--- Function to track a player
 local function trackPlayer(player)
-    -- Apply when character exists
+
     if player.Character then
         addHighlight(player.Character)
     end
-    -- Reapply every time character respawns
+
     player.CharacterAdded:Connect(addHighlight)
 end
 
--- Apply to all existing players
 for _, player in pairs(Players:GetPlayers()) do
     trackPlayer(player)
 end
 
--- Apply to new players who join
 Players.PlayerAdded:Connect(trackPlayer)
