@@ -2,10 +2,10 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Workspace = game:GetService("Workspace")
 
-local enemyColor = Color3.fromRGB(255, 0, 0) -- red for enemies/NPCs
+local enemyColor = Color3.fromRGB(255,0,0)
 local highlightName = "EnemyHighlight"
 
--- Function to add/update highlight
+-- Add or update highlight on a model
 local function addHighlight(model)
     if not model then return end
     if model:FindFirstChild(highlightName) then
@@ -16,38 +16,35 @@ local function addHighlight(model)
     highlight.Adornee = model
     highlight.FillColor = enemyColor
     highlight.FillTransparency = 0.5
-    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.OutlineColor = Color3.fromRGB(255,255,255)
     highlight.OutlineTransparency = 0.2
     highlight.Parent = model
 end
 
--- Main highlight function
-local function highlightEnemiesAndNPCs()
+-- Highlight all relevant targets
+local function highlightTargets()
     local hasTeams = false
-    -- Check if any player has a team
-    for _, player in pairs(Players:GetPlayers()) do
-        if player.Team ~= nil then
+    for _, p in pairs(Players:GetPlayers()) do
+        if p.Team ~= nil then
             hasTeams = true
             break
         end
     end
 
     -- Highlight players
-    for _, player in pairs(Players:GetPlayers()) do
-        if player.Character then
+    for _, p in pairs(Players:GetPlayers()) do
+        if p.Character and p ~= LocalPlayer then
             if hasTeams then
-                if player ~= LocalPlayer and player.Team ~= LocalPlayer.Team then
-                    addHighlight(player.Character)
+                if p.Team ~= LocalPlayer.Team then
+                    addHighlight(p.Character)
                 end
             else
-                if player ~= LocalPlayer then
-                    addHighlight(player.Character)
-                end
+                addHighlight(p.Character)
             end
         end
     end
 
-    -- Highlight NPCs / rigs in workspace
+    -- Highlight NPCs / rigs
     for _, obj in pairs(Workspace:GetChildren()) do
         if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and not Players:FindFirstChild(obj.Name) then
             addHighlight(obj)
@@ -67,12 +64,11 @@ button.Font = Enum.Font.GothamBold
 button.TextSize = 18
 button.Parent = screenGui
 
--- Click to highlight
-button.MouseButton1Click:Connect(highlightEnemiesAndNPCs)
+button.MouseButton1Click:Connect(highlightTargets)
 
--- Automatically highlight on new players or NPCs
+-- Update when new players spawn
 Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(highlightEnemiesAndNPCs)
+    player.CharacterAdded:Connect(highlightTargets)
 end)
 
-Workspace.ChildAdded:Connect(highlightEnemiesAndNPCs)
+Workspace.ChildAdded:Connect(highlightTargets)
