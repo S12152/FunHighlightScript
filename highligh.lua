@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Workspace = game:GetService("Workspace")
 local Teams = game:GetService("Teams")
+local TweenService = game:GetService("TweenService")
 
 local highlightEnabled = true
 local npcHighlightEnabled = true
@@ -35,14 +36,12 @@ local function updateHighlights()
                 addHighlight(player.Character, enemyColor)
             end
         elseif player.Character then
-            -- Remove highlights if disabled
             if player.Character:FindFirstChild("TeamHighlight") then
                 player.Character.TeamHighlight:Destroy()
             end
         end
     end
 
-    -- NPCs
     if npcHighlightEnabled then
         for _, rig in pairs(Workspace:GetChildren()) do
             if rig:IsA("Model") and rig:FindFirstChild("Humanoid") and not Players:FindFirstChild(rig.Name) then
@@ -52,31 +51,68 @@ local function updateHighlights()
     end
 end
 
--- GUI
+-- Smooth GUI
 local screenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
 screenGui.Name = "HighlightMenu"
 
-local toggleButton = Instance.new("TextButton", screenGui)
-toggleButton.Size = UDim2.new(0,150,0,50)
-toggleButton.Position = UDim2.new(0,10,0,10)
-toggleButton.Text = "Toggle Highlights"
+local menuFrame = Instance.new("Frame")
+menuFrame.Size = UDim2.new(0, 0, 0, 0) -- Start hidden
+menuFrame.Position = UDim2.new(0.5, 0, 0.5, 0) -- Center
+menuFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+menuFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+menuFrame.BorderSizePixel = 0
+menuFrame.Parent = screenGui
+menuFrame.ClipsDescendants = true
+menuFrame.Rounded = 12
 
-toggleButton.MouseButton1Click:Connect(function()
+-- Tween menu open
+local function openMenu()
+    local tween = TweenService:Create(menuFrame, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Size = UDim2.new(0, 250, 0, 200)})
+    tween:Play()
+end
+
+-- Tween menu close
+local function closeMenu()
+    local tween = TweenService:Create(menuFrame, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0)})
+    tween:Play()
+end
+
+-- Buttons
+local function createButton(text, position, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 200, 0, 40)
+    btn.Position = position
+    btn.Text = text
+    btn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 18
+    btn.AutoButtonColor = true
+    btn.Parent = menuFrame
+    btn.MouseButton1Click:Connect(callback)
+end
+
+-- Example buttons
+createButton("Toggle Highlights", UDim2.new(0, 25, 0, 20), function()
     highlightEnabled = not highlightEnabled
     updateHighlights()
 end)
 
-local toggleNPCButton = Instance.new("TextButton", screenGui)
-toggleNPCButton.Size = UDim2.new(0,150,0,50)
-toggleNPCButton.Position = UDim2.new(0,10,0,70)
-toggleNPCButton.Text = "Toggle NPCs"
-
-toggleNPCButton.MouseButton1Click:Connect(function()
+createButton("Toggle NPCs", UDim2.new(0, 25, 0, 70), function()
     npcHighlightEnabled = not npcHighlightEnabled
     updateHighlights()
 end)
 
--- Initial highlight
+createButton("Close Menu", UDim2.new(0, 25, 0, 120), closeMenu)
+
+-- Open menu when pressing H
+local UserInputService = game:GetService("UserInputService")
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.H then
+        openMenu()
+    end
+end)
+
 Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(updateHighlights)
 end)
