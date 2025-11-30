@@ -1,9 +1,10 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Workspace = game:GetService("Workspace")
-local Teams = game:GetService("Teams")
 local TweenService = game:GetService("TweenService")
+local Teams = game:GetService("Teams")
 
+-- Highlight settings
 local highlightEnabled = true
 local npcHighlightEnabled = true
 local teammateColor = Color3.fromRGB(0, 255, 0)
@@ -15,7 +16,6 @@ local function addHighlight(character, color)
     if character:FindFirstChild("TeamHighlight") then
         character.TeamHighlight:Destroy()
     end
-
     local highlight = Instance.new("Highlight")
     highlight.Name = "TeamHighlight"
     highlight.Adornee = character
@@ -51,32 +51,41 @@ local function updateHighlights()
     end
 end
 
--- Smooth GUI
-local screenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+-- Create GUI
+local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "HighlightMenu"
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local menuFrame = Instance.new("Frame")
-menuFrame.Size = UDim2.new(0, 0, 0, 0) -- Start hidden
-menuFrame.Position = UDim2.new(0.5, 0, 0.5, 0) -- Center
-menuFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+menuFrame.Size = UDim2.new(0,0,0,0) -- Start hidden
+menuFrame.Position = UDim2.new(0.5,0,0.5,0) -- Center
+menuFrame.AnchorPoint = Vector2.new(0.5,0.5)
 menuFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
 menuFrame.BorderSizePixel = 0
-menuFrame.Parent = screenGui
 menuFrame.ClipsDescendants = true
+menuFrame.Parent = screenGui
 menuFrame.Rounded = 12
 
+-- Function to tween menu open
+local function openMenu()
+    local tween = TweenService:Create(menuFrame, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Size = UDim2.new(0,250,0,200)})
+    tween:Play()
+end
 
--- Tween menu open automatically
-openMenu()  -- This makes the menu slide in at the start
+-- Function to tween menu close
+local function closeMenu()
+    local tween = TweenService:Create(menuFrame, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0)})
+    tween:Play()
+end
 
--- Buttons
+-- Function to create smooth buttons
 local function createButton(text, position, callback)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, 200, 0, 40)
     btn.Position = position
     btn.Text = text
-    btn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 18
     btn.AutoButtonColor = true
@@ -84,23 +93,29 @@ local function createButton(text, position, callback)
     btn.MouseButton1Click:Connect(callback)
 end
 
--- Example buttons
-createButton("Toggle Highlights", UDim2.new(0, 25, 0, 20), function()
+-- Buttons
+createButton("Toggle Highlights", UDim2.new(0,25,0,20), function()
     highlightEnabled = not highlightEnabled
     updateHighlights()
 end)
 
-createButton("Toggle NPCs", UDim2.new(0, 25, 0, 70), function()
+createButton("Toggle NPCs", UDim2.new(0,25,0,70), function()
     npcHighlightEnabled = not npcHighlightEnabled
     updateHighlights()
 end)
 
-createButton("Close Menu", UDim2.new(0, 25, 0, 120), closeMenu)
+createButton("Close Menu", UDim2.new(0,25,0,120), closeMenu)
 
+-- Automatically open menu after a tiny delay
+wait(0.1)
+openMenu()
+
+-- Connect highlights to respawning players
 Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(updateHighlights)
 end)
 
 Workspace.ChildAdded:Connect(updateHighlights)
 
+-- Initial highlights
 updateHighlights()
