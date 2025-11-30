@@ -21,16 +21,31 @@ local function addHighlight(character)
     highlight.Parent = character
 end
 
--- Highlight all enemy players
+-- Highlight enemies
 local function highlightEnemies()
+    local hasTeams = false
+    -- Check if any player has a team
     for _, player in pairs(Players:GetPlayers()) do
-        if player.Character and player.Team ~= LocalPlayer.Team then
-            addHighlight(player.Character)
+        if player.Team ~= nil then
+            hasTeams = true
+            break
+        end
+    end
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Character and player ~= LocalPlayer then
+            if hasTeams then
+                if player.Team ~= LocalPlayer.Team then
+                    addHighlight(player.Character) -- Only enemies
+                end
+            else
+                addHighlight(player.Character) -- Everyone else if no teams
+            end
         end
     end
 end
 
--- Button GUI
+-- GUI button
 local screenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
 local button = Instance.new("TextButton")
 button.Size = UDim2.new(0,150,0,50)
@@ -42,5 +57,5 @@ button.Font = Enum.Font.GothamBold
 button.TextSize = 18
 button.Parent = screenGui
 
--- Click event
+-- Click to highlight
 button.MouseButton1Click:Connect(highlightEnemies)
