@@ -65,17 +65,9 @@ menuFrame.Parent = screenGui
 menuFrame.ClipsDescendants = true
 menuFrame.Rounded = 12
 
--- Tween menu open
-local function openMenu()
-    local tween = TweenService:Create(menuFrame, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Size = UDim2.new(0, 250, 0, 200)})
-    tween:Play()
-end
 
--- Tween menu close
-local function closeMenu()
-    local tween = TweenService:Create(menuFrame, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0)})
-    tween:Play()
-end
+-- Tween menu open automatically
+openMenu()  -- This makes the menu slide in at the start
 
 -- Buttons
 local function createButton(text, position, callback)
@@ -104,14 +96,6 @@ createButton("Toggle NPCs", UDim2.new(0, 25, 0, 70), function()
 end)
 
 createButton("Close Menu", UDim2.new(0, 25, 0, 120), closeMenu)
-
--- Open menu when pressing H
-local UserInputService = game:GetService("UserInputService")
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and input.KeyCode == Enum.KeyCode.H then
-        openMenu()
-    end
-end)
 
 Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(updateHighlights)
